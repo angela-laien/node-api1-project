@@ -22,31 +22,44 @@ server.get("/", (req, res) => {
 });
 
 server.get("/api/users", (req, res) => {
-    if (users) {
+    try {
         res.status(200).json(users)
-    } else {
-        res.status(500).json({ message: "The user information could not be retrieved." })
+    } catch(err) {
+        res.status(500).json({ errorMessage: "The users information could not be retrieved." })
     }
 });
 
 server.get("/api/users/:id", (req, res) => {
     const id = req.params.id
 
-    const user = users.find((user) => user.id == id);
-
-    if (user) {
+    try {
+        const user = users.find((user) => user.id == id);
+        if (!user) {
+            res.status(404).json({ message: "The user with the specified ID does not exist." });
+        }
         res.status(200).json(user);
-    } else {
-        res.status(404).json({ message: "The user with the specified ID does not exist." });
+
+    } catch(err) {
+        res.status(500).json({  errorMessage: "The users information could not be retrieved." });
     }
 });
 
 server.post("/api/users", (req, res) => {
     const userInfo = req.body;
 
-    userInfo.id = shortid.generate();
+    if (userInfo.name == null || userInfo.bio == null) {
+        res.status(400).json({ errorMessage: "Please provide name and bio for the user." })
+    } else {
+        try {
+            userInfo.id = shortid.generate();
 
-    users.push(userInfo);
+            users.push(userInfo);
 
-    res.status(201).json(users);
+            res.status(201).json(users);
+
+        } catch(err) {
+            res.status(500).json({  errorMessage: "There was an error while saving the user to the database." });
+        }
+    }
+
 });
